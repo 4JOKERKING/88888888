@@ -1,6 +1,6 @@
-# A 开发指南 — 前端（Vue 3）
+# 何志 — 前端开发指南（Vue 3）
 
-> 你的任务：写出全部 6 个页面模块，对接 B 的后端 API。
+> 你的任务：写出全部 6 个页面模块，对接莫成兴的后端 API。
 
 ## 你需要做的事
 
@@ -204,7 +204,7 @@ export default defineConfig({
 3. **Element Plus 组件文档**：https://element-plus.org/zh-CN/component/overview
 4. **ECharts 示例**：https://echarts.apache.org/examples/zh/index.html
 
-## 何时找 B
+## 何时找莫成兴（后端）
 
 - 接口返回的数据结构和文档不一致
 - 接口 500 错误

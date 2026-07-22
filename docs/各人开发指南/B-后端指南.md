@@ -1,6 +1,6 @@
-# B 开发指南 — 后端（Spring Boot）
+# 莫成兴 — 后端开发指南（Spring Boot）
 
-> 你的任务：实现全部 API + 数据库设计 + RBAC 权限 + 调用 C 的 AI 服务。
+> 你的任务：实现全部 API + 数据库设计 + RBAC 权限 + 调用李珈逾的 AI 服务。
 
 ## 你需要做的事
 
@@ -290,7 +290,7 @@ fieldMapper.deleteById(1L);           // 按ID删除
 2. **看控制台日志**：Spring Boot 日志会告诉你是哪里报错
 3. **数据库可视化**：用 Navicat 或 DBeaver 连 MySQL 看数据
 
-## 何时找 C
+## 何时找李珈逾（AI 服务）
 
 - AI 服务调不通（8000端口连不上）
 - AI 返回的数据格式和文档不一致
