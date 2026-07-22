@@ -1,0 +1,34 @@
+# Node
+node_modules/
+dist/
+
+# Java
+target/
+*.class
+*.jar
+*.war
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.log
+uploads/
+temp/
+
+# Docker
+docker-data/
