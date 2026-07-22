@@ -79,14 +79,53 @@ git push origin feature/你的分支
 - ❌ 把 node_modules/、target/、__pycache__/ 提交到仓库
 - ❌ 修改别人的文件不打招呼
 
-### 3. 每天 10 分钟同步
+### 3. 代码格式规范
+
+> ⚠️ 都用 AI 写代码，不加规范的话四个人风格打架，合并时全是冲突。
+
+**通用规则（.editorconfig 已配置，自动生效）：**
+- 缩进：前端用 2 空格，Java/Python 用 4 空格
+- 编码：UTF-8
+- 换行：LF
+- 行尾去空格
+
+**Git Commit 格式：**
+```bash
+feat: 添加病害图片上传组件       # 新功能
+fix: 修复诊断结果轮询超时问题     # 修bug
+docs: 更新接口文档               # 文档改动
+refactor: 重构图片识别模块       # 重构
+```
+
+**前端（何志）：**
+- 组件名用 PascalCase：`DiagnosisUpload.vue`
+- 文件名用小写+连字符：`api/diagnosis.js`
+- 用 Element Plus 组件，自己尽量少写原生 CSS
+
+**后端（莫成兴）：**
+- 类名 PascalCase：`DiagnosisController`
+- 方法名 camelCase：`getDiagnosisById()`
+- URL 用小写+连字符：`/api/diagnosis/upload`
+- 数据库字段用下划线：`diagnosis_records`
+
+**Python（李珈逾、陶柱宏）：**
+- 文件名小写+下划线：`image_model.py`
+- 函数名小写+下划线：`recognize_disease()`
+- 类名 PascalCase：`DiagnosisAgent`
+
+**通用—AI 生成代码后必做：**
+1. 删掉 AI 的废话注释
+2. 删掉没用的 import
+3. 格式化一下（VS Code: `Shift+Alt+F`）
+
+### 4. 每天 10 分钟同步
 
 在群里简短汇报三句话：
 1. 今天完成了什么
 2. 卡在哪里了
 3. 有没有改接口
 
-### 4. .gitignore 已配好
+### 5. .gitignore 已配好
 
 不要提交 `node_modules/`、`target/`、`__pycache__/`、`venv/`、`.env` 等。
 
