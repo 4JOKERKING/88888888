@@ -1,5 +1,17 @@
+# 核心
 fastapi==0.139.2
 uvicorn==0.51.0
 python-multipart==0.0.32
 httpx==0.28.1
 pydantic==2.13.4
+
+# 真实 RAG (TF-IDF，纯离线)
+scikit-learn
+numpy
+scipy
+
+# 真实模型 (HSV像素分析 + 图片处理)
+pillow
+
+# 可选升级 (HuggingFace/ModelScope 预训练模型)
+# pip install modelscope torchvision

@@ -125,7 +125,19 @@ refactor: 重构图片识别模块       # 重构
 2. 卡在哪里了
 3. 有没有改接口
 
-### 5. .gitignore 已配好
+### 5. 当前进度
+
+| 模块 | 负责人 | 状态 |
+|------|--------|------|
+| AI 服务（ResNet50+BERT+DeepSeek） | 李珈逾 | ✅ 已完成 |
+| 数据库设计 + SQL | 已交付 | ✅ `docs/schema.sql` |
+| API 接口文档 | 已交付 | ✅ `docs/API接口文档.md` |
+| 前端 6 页面 | 何志 | ❌ 待启动 |
+| 后端 Spring Boot | 莫成兴 | ❌ 待启动 |
+| 四份文档 | 陶柱宏 | ❌ 待启动 |
+| Docker 部署 | 陶柱宏 | ❌ 待确认 |
+
+### 6. .gitignore 已配好
 
 不要提交 `node_modules/`、`target/`、`__pycache__/`、`venv/`、`.env` 等。
 

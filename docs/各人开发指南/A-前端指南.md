@@ -1,55 +1,162 @@
 # 何志 — 前端开发指南（Vue 3）
 
-> 你的任务：写出全部 6 个页面模块，对接莫成兴的后端 API。
+> ⚠️ **你只调莫成兴的后端（8080端口），不直接调李珈逾的AI服务（8000端口）。**
 
-## 你需要做的事
+## 页面清单与路由
 
-### 页面清单
+| 序号 | 页面 | 路由 | 调用的后端接口 |
+|------|------|------|--------------|
+| 1 | 登录/注册 | `/login` `/register` | POST `/api/auth/login` `/register` |
+| 2 | 农场管理 | `/farms` | GET/POST `/api/farms` |
+| 3 | 地块详细 | `/fields/:id` | GET `/api/fields/{id}`, GET `/api/crops?fieldId=` |
+| 4 | **病害诊断** | `/diagnosis` | POST `/api/diagnosis/upload` → 轮询 GET `/api/diagnosis/{id}` |
+| 5 | 诊断历史 | `/diagnosis/list` | GET `/api/diagnosis/list` |
+| 6 | 农事日历 | `/tasks` | GET/POST `/api/tasks`, PUT `/api/tasks/{id}/status` |
+| 7 | 数据看板 | `/dashboard` | GET `/api/weather?location=`, GET `/api/market-prices?cropType=` |
 
-| 序号 | 页面 | 路由 | 关键组件 |
-|------|------|------|---------|
-| 1 | 登录/注册 | `/login` `/register` | Element Plus 表单 |
-| 2 | 农场与地块管理 | `/farms` `/fields/:id` | 表格 + 弹窗表单 + 树形展开 |
-| 3 | 作物档案 | `/crops` | 卡片列表 + 时间线 |
-| 4 | **病害诊断**（核心） | `/diagnosis` | 图片上传 + 进度轮询 + 结果卡片 |
-| 5 | 农事日历 | `/tasks` | 日历视图 + 任务列表 |
-| 6 | 数据看板 | `/dashboard` | ECharts 图表 + 统计卡片 |
-| 7 | 模型监控 | `/monitor` | 指标卡片 + 未知样本列表 |
+## 关键：病害诊断页面
 
-### 项目结构
+这是核心功能。流程：**上传图片 → 拿到 diagnosisId → 每2秒轮询结果 → 展示**
 
+```vue
+<template>
+  <div class="diagnosis-page">
+    <!-- 步骤1: 上传图片 -->
+    <el-card v-if="!diagnosisId">
+      <el-form>
+        <el-form-item label="选择地块">
+          <el-select v-model="form.fieldId" @change="onFieldChange">
+            <el-option v-for="f in fields" :key="f.id" :label="f.name" :value="f.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="选择作物">
+          <el-select v-model="form.cropId">
+            <el-option v-for="c in crops" :key="c.id" :label="c.cropType" :value="c.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="症状描述">
+          <el-input v-model="form.description" type="textarea" placeholder="可选，描述异常情况" />
+        </el-form-item>
+        <el-upload
+          drag
+          :action="uploadUrl"
+          :headers="authHeader"
+          :data="uploadData"
+          :on-success="onUploadSuccess"
+          :before-upload="beforeUpload"
+          accept="image/jpeg,image/png"
+          :limit="1">
+          <el-icon><UploadFilled /></el-icon>
+          <div>拖拽图片到此处或点击上传</div>
+        </el-upload>
+      </el-form>
+    </el-card>
+
+    <!-- 步骤2: 等待结果 -->
+    <el-card v-if="diagnosisId && loading">
+      <el-skeleton :rows="8" animated />
+      <el-progress :percentage="pollProgress" />
+      <p>AI正在分析图片...</p>
+    </el-card>
+
+    <!-- 步骤3: 展示结果 -->
+    <el-card v-if="diagnosisId && result">
+      <el-result :icon="riskIcon" :title="result.disease">
+        <template #subTitle>
+          置信度: {{ (result.confidence * 100).toFixed(0) }}% | 严重度: {{ result.severity }}
+        </template>
+      </el-result>
+
+      <el-descriptions title="诊断详情" border>
+        <el-descriptions-item label="风险等级">
+          <el-tag :type="riskTagType">{{ riskLabel }}</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="天气因素">{{ result.agent_opinion.weather_factor }}</el-descriptions-item>
+        <el-descriptions-item label="随访建议">{{ result.agent_opinion.follow_up_days }}天后复查</el-descriptions-item>
+      </el-descriptions>
+
+      <el-card header="综合评估">
+        <p>{{ result.agent_opinion.overall_assessment }}</p>
+      </el-card>
+
+      <el-card header="防治建议">
+        <el-steps direction="vertical">
+          <el-step v-for="(action, i) in result.agent_opinion.recommended_actions"
+            :key="i" :title="action" />
+        </el-steps>
+        <el-divider />
+        <p><strong>参考文献：</strong>{{ result.rag_result.source_title }}</p>
+        <p>{{ result.rag_result.source_section }}</p>
+      </el-card>
+
+      <el-card header="详细防治方案">
+        <pre style="white-space: pre-wrap">{{ result.rag_result.detail }}</pre>
+      </el-card>
+    </el-card>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+import request from '@/api/index'
+
+const diagnosisId = ref(null)
+const result = ref(null)
+const loading = ref(false)
+const pollProgress = ref(0)
+
+const uploadUrl = 'http://localhost:8080/api/diagnosis/upload'
+const authHeader = { Authorization: `Bearer ${localStorage.getItem('token')}` }
+const uploadData = computed(() => ({
+  fieldId: form.fieldId,
+  cropId: form.cropId,
+  description: form.description,
+}))
+
+const riskTagType = computed(() => {
+  const map = { low: 'success', medium: 'warning', high: 'danger', critical: 'danger' }
+  return map[result.value?.agent_opinion?.risk_level] || 'info'
+})
+
+const riskLabel = computed(() => {
+  const map = { low: '低风险', medium: '中风险', high: '高风险', critical: '极高风险' }
+  return map[result.value?.agent_opinion?.risk_level] || '未知'
+})
+
+const onUploadSuccess = (response) => {
+  if (response.code === 200) {
+    diagnosisId.value = response.data.diagnosisId
+    loading.value = true
+    startPolling()
+  }
+}
+
+const startPolling = () => {
+  let count = 0
+  const timer = setInterval(async () => {
+    count++
+    pollProgress.value = Math.min(count * 10, 90)
+    const res = await request.get(`/diagnosis/${diagnosisId.value}`)
+    if (res.data.status === 'completed') {
+      clearInterval(timer)
+      pollProgress.value = 100
+      loading.value = false
+      result.value = res.data
+    }
+    if (count > 30) { // 60秒超时
+      clearInterval(timer)
+      loading.value = false
+      ElMessage.warning('诊断超时，请刷新重试')
+    }
+  }, 2000)
+}
+</script>
 ```
-frontend/
-├── src/
-│   ├── api/              # 所有 API 请求放这里
-│   │   ├── index.js      # axios 实例（baseURL, 拦截器）
-│   │   ├── auth.js       # 登录/注册
-│   │   ├── farm.js       # 农场/地块
-│   │   ├── crop.js       # 作物
-│   │   ├── diagnosis.js  # 病害诊断
-│   │   ├── task.js       # 农事任务
-│   │   └── dashboard.js  # 天气/价格/模型
-│   ├── views/            # 页面组件
-│   ├── components/       # 可复用组件
-│   ├── router/           # 路由配置
-│   └── stores/           # Pinia 状态管理
-```
 
-### 开发顺序（按这个来）
-
-1. **先搭架子**：路由 + 布局框架 + axios 封装 + 登录页
-2. **农场/地块管理**：纯 CRUD，最标准，练手
-3. **作物档案**：和地块类似
-4. **病害诊断**：核心功能，图片上传 + 轮询结果
-5. **农事日历**：日历组件 + 任务 CRUD
-6. **数据看板**：ECharts 折线图/柱状图
-7. **模型监控**：最后做，数据从 API 拿
-
-## 关键代码模式
-
-### 1. axios 封装 (`src/api/index.js`)
+## API 调用封装
 
 ```javascript
+// src/api/index.js
 import axios from 'axios'
 
 const request = axios.create({
@@ -57,16 +164,12 @@ const request = axios.create({
   timeout: 30000,
 })
 
-// 请求拦截器：自动带 token
 request.interceptors.request.use(config => {
   const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
-// 响应拦截器：统一错误处理
 request.interceptors.response.use(
   res => res.data,
   err => {
@@ -81,131 +184,34 @@ request.interceptors.response.use(
 export default request
 ```
 
-### 2. API 调用示例 (`src/api/farm.js`)
+## 数据看板图表（ECharts）
 
 ```javascript
-import request from './index'
-
-export const getFarmList = () => request.get('/farms')
-export const createFarm = (data) => request.post('/farms', data)
-export const getFieldList = (farmId) => request.get('/fields', { params: { farmId } })
-export const getFieldDetail = (id) => request.get(`/fields/${id}`)
-export const createField = (data) => request.post('/fields', data)
-```
-
-### 3. 图片上传组件（病害诊断核心）
-
-```vue
-<template>
-  <el-upload
-    drag
-    :action="uploadUrl"
-    :headers="{ Authorization: 'Bearer ' + token }"
-    :on-success="handleSuccess"
-    :on-error="handleError"
-    :before-upload="beforeUpload"
-    accept="image/jpeg,image/png"
-    :limit="1"
-  >
-    <el-icon><UploadFilled /></el-icon>
-    <div>拖拽图片到此处或点击上传</div>
-    <template #tip>
-      <div>支持 JPG/PNG，不超过 10MB</div>
-    </template>
-  </el-upload>
-</template>
-
-<script setup>
-const uploadUrl = 'http://localhost:8080/api/diagnosis/upload'
-const token = localStorage.getItem('token')
-
-const beforeUpload = (file) => {
-  const isImage = file.type.startsWith('image/')
-  const isLt10M = file.size / 1024 / 1024 < 10
-  if (!isImage) {
-    ElMessage.error('只能上传图片文件')
-    return false
-  }
-  if (!isLt10M) {
-    ElMessage.error('图片不能超过 10MB')
-    return false
-  }
-  return true
+// 天气趋势
+const weatherOption = {
+  xAxis: { type: 'category', data: dates },
+  yAxis: [
+    { type: 'value', name: '温度(℃)' },
+    { type: 'value', name: '湿度(%)' }
+  ],
+  series: [
+    { name: '温度', type: 'line', data: temps },
+    { name: '湿度', type: 'line', yAxisIndex: 1, data: humidities }
+  ]
 }
 
-const handleSuccess = (response) => {
-  // 拿到 diagnosisId，开始轮询结果
-  startPolling(response.data.diagnosisId)
-}
-</script>
-```
-
-### 4. 轮询诊断结果
-
-```javascript
-const startPolling = (diagnosisId) => {
-  const timer = setInterval(async () => {
-    const res = await request.get(`/diagnosis/${diagnosisId}`)
-    if (res.data.status === 'completed') {
-      clearInterval(timer)
-      // 展示结果
-      showResult(res.data)
-    }
-  }, 2000) // 每2秒查一次
+// 价格趋势
+const priceOption = {
+  xAxis: { type: 'category', data: dates },
+  yAxis: { type: 'value', name: '元/公斤' },
+  series: [{ name: '价格', type: 'line', data: prices, smooth: true }]
 }
 ```
 
-### 5. ECharts 图表示例（数据看板）
+## 调试
 
-```vue
-<template>
-  <div ref="chartRef" style="width:100%;height:300px"></div>
-</template>
-
-<script setup>
-import * as echarts from 'echarts'
-import { ref, onMounted } from 'vue'
-
-const chartRef = ref(null)
-
-onMounted(() => {
-  const chart = echarts.init(chartRef.value)
-  chart.setOption({
-    title: { text: '近期温度趋势' },
-    xAxis: { type: 'category', data: ['7/16','7/17','7/18','7/19','7/20','7/21','7/22'] },
-    yAxis: { type: 'value', name: '℃' },
-    series: [{ data: [26,28,24,22,25,27,24], type: 'line', smooth: true }]
-  })
-})
-</script>
-```
-
-## 调试技巧
-
-1. **F12 打开浏览器开发者工具 → Network 面板**
-   - 看请求是否发出去了（Status 是 200 还是 400/500）
-   - 看请求参数对不对
-   - 看返回数据对不对
-
-2. **跨域问题**：如果后端没配 CORS，在 `vite.config.ts` 加：
-```typescript
-export default defineConfig({
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true
-      }
-    }
-  }
-})
-```
-
-3. **Element Plus 组件文档**：https://element-plus.org/zh-CN/component/overview
-4. **ECharts 示例**：https://echarts.apache.org/examples/zh/index.html
-
-## 何时找莫成兴（后端）
-
-- 接口返回的数据结构和文档不一致
-- 接口 500 错误
-- 需要新的接口（字段不够用）
+1. 先确认莫成兴的后端已启动：`curl http://localhost:8080/api/auth/login`
+2. F12 → Network → 看请求是否 200
+3. 跨域问题 → 找莫成兴加 CORS 配置
+4. Element Plus 文档：https://element-plus.org/zh-CN/
+5. ECharts 示例：https://echarts.apache.org/examples/zh/

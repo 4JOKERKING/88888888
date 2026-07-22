@@ -1,0 +1,136 @@
+{
+  "health_check": {
+    "status": "ok",
+    "model_loaded": true,
+    "model_version": "1.0.0"
+  },
+  "diagnose_tests": [
+    {
+      "crop": "番茄",
+      "stage": "开花坐果期",
+      "location": "昆明呈贡",
+      "disease": "番茄灰霉病",
+      "confidence": 0.82,
+      "severity": "严重",
+      "risk": "critical",
+      "rag_ok": true,
+      "bulletin_ok": false,
+      "elapsed_ms": 4,
+      "passed": true
+    },
+    {
+      "crop": "番茄",
+      "stage": "苗期",
+      "location": "玉溪",
+      "disease": "健康",
+      "confidence": 0.94,
+      "severity": "无",
+      "risk": "low",
+      "rag_ok": false,
+      "bulletin_ok": false,
+      "elapsed_ms": 3,
+      "passed": true
+    },
+    {
+      "crop": "辣椒",
+      "stage": "结果期",
+      "location": "文山",
+      "disease": "辣椒疫病",
+      "confidence": 0.88,
+      "severity": "严重",
+      "risk": "critical",
+      "rag_ok": true,
+      "bulletin_ok": false,
+      "elapsed_ms": 3,
+      "passed": true
+    },
+    {
+      "crop": "辣椒",
+      "stage": "开花坐果期",
+      "location": "红河",
+      "disease": "辣椒炭疽病",
+      "confidence": 0.82,
+      "severity": "中等",
+      "risk": "high",
+      "rag_ok": true,
+      "bulletin_ok": false,
+      "elapsed_ms": 2,
+      "passed": true
+    },
+    {
+      "crop": "花卉",
+      "stage": "开花坐果期",
+      "location": "昆明",
+      "disease": "白粉病",
+      "confidence": 0.83,
+      "severity": "轻度",
+      "risk": "medium",
+      "rag_ok": true,
+      "bulletin_ok": false,
+      "elapsed_ms": 3,
+      "passed": true
+    },
+    {
+      "crop": "马铃薯",
+      "stage": "结果期",
+      "location": "昭通",
+      "disease": "番茄叶霉病",
+      "confidence": 0.81,
+      "severity": "轻度",
+      "risk": "medium",
+      "rag_ok": true,
+      "bulletin_ok": false,
+      "elapsed_ms": 3,
+      "passed": true
+    },
+    {
+      "crop": "葡萄",
+      "stage": "成熟期",
+      "location": "大理",
+      "disease": "番茄青枯病",
+      "confidence": 0.78,
+      "severity": "严重",
+      "risk": "critical",
+      "rag_ok": true,
+      "bulletin_ok": false,
+      "elapsed_ms": 2,
+      "passed": true
+    },
+    {
+      "crop": "茶叶",
+      "stage": "成熟期",
+      "location": "普洱",
+      "disease": "番茄早疫病",
+      "confidence": 0.91,
+      "severity": "轻度",
+      "risk": "medium",
+      "rag_ok": true,
+      "bulletin_ok": false,
+      "elapsed_ms": 2,
+      "passed": true
+    }
+  ],
+  "edge_cases": [
+    {
+      "test": "非植物图片拒识",
+      "disease": "番茄灰霉病",
+      "confidence": 0.79,
+      "low_confidence": false,
+      "passed": false
+    }
+  ],
+  "performance": {
+    "weather_api": {
+      "ok": false
+    },
+    "market_api": {
+      "ok": false
+    }
+  },
+  "summary": {
+    "diagnose_pass_rate": "8/8",
+    "rag_retrieval_rate": "7/8",
+    "avg_response_ms": 3,
+    "weather_source": "N/A"
+  }
+}

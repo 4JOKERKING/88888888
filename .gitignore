@@ -33,3 +33,10 @@ temp/
 # Docker
 docker-data/
 期末任务.docx
+.env
+"ai-service/chroma_db/" 
+"ai-service/vector_data/" 
+"ai-service/model_data/" 
+"ai-service/tests/_test.jpg" 
+"ai-service/tests/_strange.jpg" 
+"ai-service/tests/test_images/" 
