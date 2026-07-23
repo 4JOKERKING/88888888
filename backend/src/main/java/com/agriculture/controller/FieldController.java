@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/fields")
@@ -29,7 +30,7 @@ public class FieldController {
     }
 
     @GetMapping("/{id}")
-    public Result<Field> getById(@PathVariable Long id) {
+    public Result<Map<String, Object>> getById(@PathVariable Long id) {
         return Result.ok(fieldService.getById(id));
     }
 }

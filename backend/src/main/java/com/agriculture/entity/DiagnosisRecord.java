@@ -1,6 +1,7 @@
 package com.agriculture.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,8 +19,11 @@ public class DiagnosisRecord {
     private BigDecimal confidence;
     private String severity;
     private String modelVersion;
+    @JsonRawValue
     private String recognitionResult;
+    @JsonRawValue
     private String ragSuggestion;
+    @JsonRawValue
     private String agentOpinion;
     private String riskLevel;
     private String status;
